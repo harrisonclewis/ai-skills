@@ -1,6 +1,6 @@
 # Data loading
 
-Display data comes through one cached resource hook (React hook, Vue composable, Svelte store, Solid resource). Clicks and submits go through the action hook (`mutations.md`). Build the resource hook on a cache library with stale-while-revalidate semantics (SWR, TanStack Query, Pinia Colada, svelte-query…) or write the same contract yourself.
+Display data comes through one cached resource hook (React hook, Vue composable, Svelte store, Solid resource). Clicks and submits go through the action hook (`mutations.md`). Build the resource hook on a data-cache library with stale-while-revalidate semantics, or write the same contract yourself.
 
 ## The contract
 

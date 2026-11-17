@@ -104,11 +104,12 @@ The rules for a single-page app talking to a JSON API. Framework names (React, V
 
 ## 6. Design system
 
-- **Utility classes with the framework's default tokens** (palette, spacing, breakpoints, dark mode). NEVER per-component CSS files or custom colour tokens. Class strings complete in source (`colors[color]`, never `` `bg-${color}-500` ``).
-- **`className` only for placement and spacing**; never to override a component's own look.
-- **State is styled from data attributes** (`data-hover`, `data-focus`, `data-disabled`, `data-invalid`, `data-open`), set by the headless library or a small helper.
+- **One styling approach for the whole app**, whatever it is (utility classes, CSS modules, scoped styles…). Never two side by side.
+- **Design tokens named by role** (`background`, `surface`, `foreground`, `accent`, `danger`…) for colour, spacing, radii, type and motion. NEVER raw hex, one-off sizes or arbitrary font sizes in a component. No dynamic style names the build can't see.
+- **A caller's class or style prop is for placement and spacing only**; never to override a component's own look.
+- **State is styled from what the element exposes** (`:hover`, `:focus-visible`, `:disabled`, ARIA attributes, the kit's data attributes), never from class names computed in script. Focus rings on `:focus-visible` only.
 - **Alternatives are a `variant` prop**, never `tone`, never one component per look. A wrapper that only binds data (`ErrorNotice` = an action's error → `Notice variant="error"`, re-keyed per failure) is allowed.
-- **One headless library underneath for behaviour** (focus, keyboard, overlays, ARIA); never a second component library beside it. Pages use our wrappers, not the library directly.
+- **One component foundation for behaviour** (focus, keyboard, overlays, ARIA); never a second component kit beside it. Pages use the project's own components (wrappers, or copied-in source the project owns), never a third-party UI package directly.
 - **NEVER colour alone:** every status/level colour comes with a word or icon.
 - **A fixed z-index scale:** dialogs 50, popovers/menus 60, tooltips 70, toasts 80.
 - **Motion is subtle and CSS-first** (fades ≤ 200 ms, small lifts/slides), off under `prefers-reduced-motion`.
@@ -159,7 +160,7 @@ The rules for a single-page app talking to a JSON API. Framework names (React, V
 - [ ] List state in the URL, canonical, page 1 on change, debounced search with `replace`, `aria-sort`.
 - [ ] Primary rightmost, one solid per group, red only for destruction, verb + object labels, disabled Save says why.
 - [ ] Confirmation via the one component; dialog state reset per opening; delete is not a page.
-- [ ] No per-component CSS, no interpolated classes, no colour-only meaning, z-index from the scale.
+- [ ] Styling follows the project's one approach, tokens only (no raw values), no interpolated class names, no colour-only meaning, z-index from the scale.
 - [ ] Copy follows [references/copy.md](references/copy.md); nothing from the URL rendered.
 - [ ] Secrets out of the DOM until revealed; one-time secrets in component state only.
 - [ ] Keyboard, focus, names, announcements, reduced motion; charts have summary + table.

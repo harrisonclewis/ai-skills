@@ -1,13 +1,13 @@
 # Accessibility
 
-Accessibility is part of "done" for every UI change, not a later pass. The headless component library supplies most ARIA and keyboard behaviour; these rules cover what it can't know. How to test it is `testing`.
+Accessibility is part of "done" for every UI change, not a later pass. The component foundation should supply most ARIA and keyboard behaviour (check it does); these rules cover what it can't know. How to test it is `testing`.
 
 ## The baseline
 
 | Requirement | How |
 | --- | --- |
 | **Keyboard** | Everything works with Tab, Shift+Tab, Enter, Space, Escape and arrows. No `div` with `onClick`: use `<button>` or `<a href>`. Lists of options use roving focus (arrows), not one tab stop per item. |
-| **Visible focus** | A focus ring on `:focus-visible` (`data-focus`) on every interactive element; never `outline: none` without a replacement. |
+| **Visible focus** | A focus ring on `:focus-visible` on every interactive element; never `outline: none` without a replacement. |
 | **Accessible names** | Every control has one: a visible `<label>`, or `aria-label` for icon-only buttons ("Copy workspace ID", "Hide sidebar"). A visually hidden label (`sr-only`) beside a section title still counts. Hidden table column headers name icon/menu columns ("Actions"). A select/listbox trigger's name is its **label** ("Status"), never the selected value; the value is announced as the control's value. Why: a name that changes with each choice ("Planned soon") leaves the user not knowing what the control is for. |
 | **Descriptions** | Field help and errors wired with `aria-describedby`; `aria-invalid` on invalid fields. A disabled button's reason is its description. A locked field's reason is its description. |
 | **Errors announced** | Error notices and error toasts `role="alert"`; an error that repeats is announced again (re-key it). |
@@ -26,7 +26,7 @@ Accessibility is part of "done" for every UI change, not a later pass. The headl
 - **Dialogs** trap focus, close on Escape (unless busy), and are labelled by their title and described by their description.
 - **Revealing content moves focus to it** and announces it. Removing a filter badge moves focus to the next badge or the Filters button. Never let focus fall to `<body>` after something disappears.
 - **Hidden UI is out of reach:** a collapsed sidebar or a closed panel is `hidden`/`inert`/`visibility: hidden` once it has finished sliding out, not just `opacity: 0` or off-screen; it reappears at once when shown. Otherwise keyboard users tab into invisible controls.
-- While a modal is open the rest of the page is hidden from assistive tech (the library does this; don't fight it).
+- While a modal is open the rest of the page is hidden from assistive tech (the component foundation should do this; check it, and don't fight it).
 - The page heading is an `<h1>`; heading levels don't skip.
 
 ## Forms

@@ -1,49 +1,34 @@
 # Design system
 
-A restrained, neutral look (one grey scale, e.g. zinc), light and dark modes following the system setting, one font, one icon set. Behaviour comes from one headless component library; looks come from utility classes. Tailwind is used as the illustration below; any utility-class system with default tokens follows the same rules.
+A restrained, neutral look: one neutral scale, one accent, light and dark modes following the system setting, one or two fonts, one icon set. Whatever the stack uses for styling (utility classes, CSS modules, scoped styles, CSS-in-JS) and for behaviour (a headless kit, a copied-in component registry, hand-built parts), the rules below are the same. Pick one of each per project, record it in the project docs, and follow it everywhere.
 
 ## Styling rules
 
-- **Utility classes in markup, with the default tokens:** default palette, spacing scale, mobile-first breakpoints (`sm:`, `lg:`), `dark:` variants. **NEVER per-component CSS files, CSS-in-JS, or custom colour tokens.** The only global CSS sets the font and element defaults. Why: one vocabulary everyone already knows, no specificity fights, no dead CSS, and a reviewer can read the look from the markup.
-- **Complete class strings.** The build scans source for class names; it can't see interpolations.
+- **One styling approach for the whole app.** Never mix two (no utility classes in one area and a CSS-in-JS library in another). Why: one vocabulary, no specificity fights, no dead CSS, and a reviewer knows where a look comes from.
+- **Design tokens, not raw values.** Colours, spacing, radii, font sizes, shadows and motion timings come from one shared set of tokens (CSS variables or the styling system's theme), named by role (`background`, `surface`, `foreground`, `muted`, `border`, `accent`, `danger`, `warning`, `success`). **NEVER a raw hex value, a one-off pixel size or an arbitrary font size in a component.** Dark mode is the same role names with different values, never a second set of colours chosen per component.
+- **Global CSS stays small:** tokens, the font, element defaults (box sizing, the focus ring) and nothing else.
+- **No dynamic style names the build can't see.** If the build scans source for class names, write them out in full and pick one from a map (`variants[variant]`), never build one by interpolation (`` `bg-${color}` ``).
+- **No inline `style` for what the styling system can do.** The exception is a value only known at runtime (a measured width, a progress percentage), passed as a CSS variable. Popups size and place themselves with the CSS variables or props their positioning code provides (anchor width, available height, transform origin), never hard-coded sizes.
+- **Callers control placement only.** A component accepts a class or style prop for margin, width and grid placement, merged with its own. A caller never overrides the component's look (`<Button class="red">`): add a variant instead.
 
-  ```
-  // WRONG: bg-${color}-500 never reaches the stylesheet
-  // RIGHT:
-  const colors = { zinc: "bg-zinc-600 text-white", red: "bg-red-600 text-white" }
-  class={colors[color]}
-  ```
+## Styling state
 
-- **No inline `style` for what a class can do.** Popups size and place themselves with the headless library's CSS variables (`--anchor-width`, `--available-height`, `--transform-origin`).
-- **`className` is for placement and spacing only** (`mt-4`, `w-full`, `col-span-2`). Components merge it with their own classes (`cx(className, own)`). Never pass a utility that competes with the component's own look (`<Button className="bg-red-500">`): add a variant instead.
+Interactive state (hover, pressed, keyboard focus, disabled, invalid, checked, selected, highlighted, open, entering/leaving) is styled from **what the element already exposes**: native pseudo-classes (`:hover`, `:focus-visible`, `:disabled`, `:checked`), ARIA attributes (`[aria-expanded]`, `[aria-selected]`, `[aria-invalid]`, `[aria-current]`) or the data attributes the component kit sets. Never mirror that state into script to compute class names.
 
-## State via data attributes
+Why: the browser or the kit already knows the state; styling from it keeps that knowledge in one place, works in dev tools, and lets tests assert state by the same attribute. Where a plain link or button needs to match a kit part's states, use the same attributes or pseudo-classes the kit's parts use, from one shared helper.
 
-Interactive state is exposed as data attributes and styled with attribute variants, not by computing class names in script:
-
-| Attribute | Means |
-| --- | --- |
-| `data-hover`, `data-active`, `data-focus` | pointer over, pressed, keyboard focus (`data-focus` = focus-visible) |
-| `data-disabled`, `data-invalid`, `data-checked`, `data-selected` | control state |
-| `data-highlighted` | the menu item/option under the pointer or arrow keys |
-| `data-open` / `data-popup-open` | an overlay or its trigger is open |
-| `data-starting-style`, `data-ending-style` | an overlay entering / leaving (kept mounted until the transition ends) |
-
-```
-class="data-hover:bg-zinc-950/5 data-focus:outline-2 data-disabled:opacity-50"
-```
-
-Why: the headless library already knows the state; attributes keep that knowledge in one place, work in dev tools, and make tests able to assert state. Plain links and buttons get `data-hover/active/focus` from a small shared helper so they match library parts.
+- **Focus rings on `:focus-visible` only**, never on pointer focus, never `outline: none` without a replacement. One focus style, defined once.
 
 ## Components
 
-- **One headless library for behaviour** (focus trapping, keyboard, overlays, positioning, ARIA): e.g. Base UI or React Aria (React), Reka UI (Vue), Bits UI or Melt (Svelte), Kobalte (Solid). **NEVER a second component library beside it.** A new interactive control starts from the library part that has its behaviour.
-- **Pages use our wrappers**, never the headless library directly (enforce with a lint import rule): the wrapper is where styling and our conventions live.
-- **Reuse before adding:** extend an existing primitive rather than writing new markup. Where page-only vs shared components live is `project-structure`.
+- **One component foundation for behaviour** (focus trapping, keyboard, overlays, positioning, ARIA). Whatever it is, it is the only one: **NEVER a second component kit beside it.** A new interactive control starts from the foundation's part that already has its behaviour, never from a bare `<div>` with handlers.
+- **Pages use the project's components**, never a third-party UI package directly (enforce with a lint import rule). If components are copied into the repo as source, those files are the project's components; if a package is installed, a thin wrapper in the components folder is. Either way, that is where styling and our conventions live, and the one place to change when the foundation changes.
+- **Copied-in component source** is owned code: reviewed, tested and kept consistent with these rules. Compose and wrap it; edit its internals only deliberately, and note that the next update from upstream may overwrite the edit.
+- **Reuse before adding:** extend an existing component rather than writing new markup. Where page-only vs shared components live is `project-structure`.
 - **Alternatives are a `variant` prop** (`<Notice variant="error|success|info|warning">`). Never `tone`, never a separate component per look (`ErrorBox`, `SuccessNotice`, `WarningBanner`) for the same thing. (A prop that is the *value* being shown, such as a monitoring `level`, keeps its own name.)
 - **A binding wrapper is not a variant.** `ErrorNotice` takes an action's `error` and renders `<Notice variant="error">` from it: nothing when there's no message, the request ID as its reference, and re-keyed on each failure so a repeated identical error is announced again. Why: the same three-line conditional (check message, set key, pick variant) was repeated on every form, and each copy forgot the re-key. It adds no look of its own; it only binds data to the one `Notice`.
 - Component files are kebab-case and export a family (`dialog.<ext>`: `Dialog`, `DialogTitle`, `DialogDescription`, `DialogBody`, `DialogActions`). Keep props stable once used.
-- **Icons** come from one set at fixed sizes (16/20 px solid), marked `data-slot="icon"` so the component around them sizes and colours them.
+- **Icons** come from one set at a few fixed sizes; the component around an icon sizes and colours it, the call site doesn't.
 
 Expected primitives: Button (`variant`, `href`, `loading`, `disabled`, `disabledReason`), Link, Badge (`color`, `onRemove`), Notice (`variant`, `onRetry`, `onDismiss`), ErrorNotice (binds an action's `error` to `Notice variant="error"`), Reference (request ID), EmptyState, ListSkeleton, Toast, Field/Label/Description/ErrorMessage, Input (`blurred`, read-only lock), InputGroup with at most two trailing actions, Checkbox, RadioGroup (2 to 4 visible options; longer → Listbox), Listbox, Combobox, Dialog, ConfirmationDialog, Dropdown (⋯ menu), Tooltip, Table, PaginatedTable, Pagination, SearchField, SettingsSection (`variant="danger"`), Heading, Text, CopyButton, Reveal, Disclosure (instead of raw `<details>`), Stat, charts.
 
@@ -72,21 +57,21 @@ Overlays portal into `<body>`, so stacking is by z-index alone. Use exactly:
 | tooltips | 70 |
 | toasts | 80 |
 
-So a listbox opened inside a dialog sits above it, a tooltip above both, a toast above everything. **NEVER `z-[9999]`.** A dialog over a dialog is the library's nested dialog: each layer renders its own backdrop (the dim compounds), the parent recedes slightly, and Escape closes only the top one.
+So a listbox opened inside a dialog sits above it, a tooltip above both, a toast above everything. **NEVER `z-[9999]`.** A dialog over a dialog uses the kit's nested dialog support: each layer renders its own backdrop (the dim compounds), the parent recedes slightly, and Escape closes only the top one.
 
 ## Overlays
 
-- Overlays animate in and out in CSS on `data-starting-style` / `data-ending-style` (or `@starting-style` for one mounted already open). Short fades; no JavaScript animation needed.
-- **Open overlays lock page scroll** without shifting layout (the library's lock hides the scrollbar and compensates its width).
+- Overlays animate in and out with short fades, using the entering/leaving state the kit exposes (the overlay stays mounted until its exit finishes). Prefer CSS transitions to script-driven animation.
+- **Open overlays lock page scroll** without shifting layout (hide the scrollbar and compensate its width).
 - **Focus returns to the opener** when an overlay closes (see `forms-and-actions.md#dialogs`).
-- While a modal overlay is open, the rest of the page is hidden from assistive tech (`inert`/`aria-hidden`), which the library does.
+- While a modal overlay is open, the rest of the page is hidden from assistive tech (`inert`/`aria-hidden`), which the kit should do; check it.
 - A listbox opens over its button with the selected option aligned to it (off for touch), at least as wide as the button.
 
 ## Motion
 
 - **Subtle and functional:** a new page fades in and lifts 6 px over 200 ms; tab content slides 12 px from the side of the chosen tab; a hover/focus background slides between items in a group (sidebar, tabs, menu); a current-page indicator slides between items.
-- **CSS first** (`transition`, `@starting-style`), leaving no transform behind on the element (a leftover `transform` creates a containing block that breaks fixed/sticky children).
-- **Respect `prefers-reduced-motion`:** `motion-reduce:transition-none` on plain transitions; the animation library's "reduced motion = user" setting for JS animation (things still move to their place, without sliding). Browsers without `@starting-style` show the page at once.
+- **CSS first** (transitions over script animation), leaving no transform behind on the element (a leftover `transform` creates a containing block that breaks fixed/sticky children).
+- **Respect `prefers-reduced-motion`:** plain transitions turn off; script animation follows the user's setting (things still move to their place, without sliding). Use motion timings from the tokens, not per-component durations.
 - Nothing animates on arrival or when only the tenant changes; key page transitions by pathname, not by search params.
 - Judge timing on a production build, not the dev server (`dev-double-render.md`).
 - A sliding element measured in page coordinates inside a `position: fixed` pane needs that pane marked as its own scroll root, or it slides in from a scroll's distance away.
@@ -95,7 +80,7 @@ So a listbox opened inside a dialog sits above it, a tooltip above both, a toast
 
 - Stack at the bottom right (across the bottom on phones), newest in front, up to 5, fanning out on hover/focus.
 - Hide after 5 s, **paused while hovered or focused**; `duration: Infinity` keeps one until dismissed. Each has a dismiss button. No swipe-to-dismiss.
-- Same icon and role as the matching notice variant: success → `role="status"`, error → `role="alert"`. (If the library makes each toast a `dialog`, override the container to `presentation`; a toast is not a dialog.)
+- Same icon and role as the matching notice variant: success → `role="status"`, error → `role="alert"`. (If the kit makes each toast a `dialog`, override the container to `presentation`; a toast is not a dialog.)
 - The toaster is mounted by the signed-in layout only; signing out unmounts it and its toasts. Calling `toast()` with no toaster mounted shows nothing and **never throws**, so a shared action used on a toaster-less page can't crash it (those pages show inline notices instead, `mutations.md`). What goes in a toast: `mutations.md#every-success-is-a-toast`.
 
 ## Persisted UI preferences

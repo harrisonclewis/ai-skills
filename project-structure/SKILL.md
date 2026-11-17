@@ -98,7 +98,7 @@ request → middleware (security, session, tenant, permission, limit)
 | Page registry | `routes.<ext>` | URL → page file | pages |
 | App root | `root.<ext>` | document, providers, error boundary | everything below |
 | Pages | `pages/…` | one page per folder, its local UI | all below |
-| Primitives | `components/ui/` | generic reused UI (button, input, dialog, table, badge, notice) | lib, types, UI kit |
+| Primitives | `components/ui/` | generic reused UI (button, input, dialog, table, badge, notice) | lib, types, third-party UI package |
 | Layout | `components/layout/` | page chrome (application, auth, sidebar layouts) | ui, lib |
 | Feature components | `components/app/<feature>/` | domain UI shared by **two or more** pages | ui, layout, lib, types |
 | Lib | `lib/` | non-visual helpers, hooks, session/tenant access, loaders, formatting | types |
@@ -116,14 +116,14 @@ request → middleware (security, session, tenant, permission, limit)
 
 - **NEVER** create a component file for UI used by one page (`DashboardPage`, `ProjectHeaderSection`). Page-only UI stays **in the page file**, split into **named local functions** (`function MembersTable()`, `function DangerZone()`).
 - When a second page needs it, **move** it: generic → `components/ui`; chrome → `components/layout`; domain → `components/app/<feature>`.
-- **ALWAYS** reuse or extend an existing primitive before writing new markup or styles. **NEVER** build a second component library beside the chosen UI kit.
+- **ALWAYS** reuse or extend an existing primitive before writing new markup or styles. **NEVER** add a second component kit beside the one the project uses.
 - Alternatives are a `variant` prop (`<Notice variant="error">`), never `tone`, never one component per look (`ErrorBox`, `InfoNotice`). A wrapper that only binds data to a variant (`ErrorNotice` taking an action's `error`) is allowed (`ui-patterns`).
 - A primitive file groups a family of named exports: `fieldset.<ext>` exports `Fieldset`, `Legend`, `Field`, `Label`, `Description`, `ErrorMessage`.
 
 ## 7. Each third-party library is wrapped by exactly one module
 
-- **MUST** import a third-party library from **one** wrapper module (or, for a component kit, only from the primitives layer, each kit part wrapped by exactly one primitive). Everything else imports the wrapper.
-  - Charting library → only `components/ui/chart.<ext>`. QR library → only `components/app/mfa/qr-code.<ext>`. Markdown lexer → only a build-time module. Headless UI kit → only `components/ui/*`, `components/layout/*`.
+- **MUST** import a third-party library from **one** wrapper module (or, for a component kit, only from the primitives layer, each kit part wrapped by exactly one primitive; component source copied into the repo is itself the primitives layer and needs no extra wrapper). Everything else imports the wrapper.
+  - Charting library → only `components/ui/chart.<ext>`. QR library → only `components/app/mfa/qr-code.<ext>`. Markdown lexer → only a build-time module. Third-party UI package → only `components/ui/*`, `components/layout/*`.
 - **MUST** enforce it with a lint rule (`no-restricted-imports` or equivalent) so the next import elsewhere fails.
 - Why: swapping or upgrading the library touches one file; bundle splitting keeps a heavy library out of builds that don't need it; the CSP/security review of what it does (inline styles, `eval`, network) is done once; behaviour (focus return, keyboard) stays consistent.
 - Every new dependency: record licence, pinned version, why, and which module wraps it in the frontend/backend README's Dependencies section; run the audit. Fix type errors properly, **NEVER** silence them with `any`/unsafe casts.

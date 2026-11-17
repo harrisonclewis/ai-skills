@@ -93,11 +93,11 @@ Common mistakes:
 
 ## Primitive rules
 
-- Keep each primitive's established props when extending it (`<Button color outline plain href loading>`, `<Dialog open onClose size>`). Add a `variant` for alternatives.
-- Accept `className` for placement/spacing only; the primitive merges it before its own classes so callers can't break its look.
-- Map variants to complete class strings (utility-CSS frameworks only detect literal class names).
+- Keep each primitive's established props when extending it (`<Button variant href loading>`, `<Dialog open onClose size>`). Add a `variant` for alternatives.
+- Accept a class or style prop for placement/spacing only; the primitive merges it so callers can't break its look.
+- Style from the project's design tokens; map variants to complete style names, never interpolated ones.
 - Primitives own accessibility once: keyboard navigation, visible focus, accessible names, labels, announced errors/status, reduced motion. See `ui-patterns`.
-- The UI kit (headless behaviour library) is imported only by `components/ui`, `components/layout`, `lib` and `root` (lint-enforced). Pages use our components, never the kit directly.
+- A third-party UI package (component kit, behaviour primitives) is imported only by `components/ui`, `components/layout`, `lib` and `root` (lint-enforced). Pages use our components, never the package directly. Component source copied into the repo from a registry lives under `components/` and counts as our components.
 
 ## The API client
 
